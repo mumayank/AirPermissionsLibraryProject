@@ -1,12 +1,12 @@
 package mumayank.com.airpermissions
 
 import android.app.Activity
-import android.content.pm.PackageManager
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 
 
 private const val PERMISSION_REQUEST = 1243
@@ -19,11 +19,14 @@ class AirPermissions(
     interface Callbacks {
         fun onSuccess()
         fun onFailure()
+        fun onAnyPermissionPermanentlyDenied()
     }
 
     init {
+        if (areAllPermissionsGranted()) callbacks.onSuccess() else ActivityCompat.requestPermissions(activity, permissionsList, PERMISSION_REQUEST)
+    }
 
-        // First check if all permissions are already available
+    private fun areAllPermissionsGranted(): Boolean {
         var allPermissionsAvailable = true
         for (permission in permissionsList) {
             if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
@@ -31,21 +34,33 @@ class AirPermissions(
                 break
             }
         }
-        if (allPermissionsAvailable) {
-            callbacks.onSuccess()
-        } else {
-            ActivityCompat.requestPermissions(activity, permissionsList, PERMISSION_REQUEST)
-        }
+        return allPermissionsAvailable
+    }
 
+    private fun isAnyPermissionPermanentlyDisabled(): Boolean {
+        var isAnyPermissionPermanentlyDisabled = false
+        for (permission in permissionsList) {
+            if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission) == false) {
+                    isAnyPermissionPermanentlyDisabled = true
+                    break
+                }
+            }
+        }
+        return isAnyPermissionPermanentlyDisabled
     }
 
     fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
             PERMISSION_REQUEST -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                if (areAllPermissionsGranted()) {
                     callbacks.onSuccess()
                 } else {
-                    callbacks.onFailure()
+                    if (isAnyPermissionPermanentlyDisabled()) {
+                        callbacks.onAnyPermissionPermanentlyDenied()
+                    } else {
+                        callbacks.onFailure()
+                    }
                 }
                 return
             }
@@ -58,7 +73,7 @@ class AirPermissions(
             intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
             val uri = Uri.fromParts("package", activity.packageName, null)
             intent.data = uri
-            activity.startActivityForResult(intent, PERMISSION_REQUEST)
+            activity.startActivity(intent)
         }
     }
 
