@@ -30,17 +30,29 @@ class MainActivity : AppCompatActivity() {
         airPermission = AirPermissions(
             this,
             arrayOf(
-                android.Manifest.permission.ACCESS_COARSE_LOCATION,     // EXAMPLE
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE      // EXAMPLE
+                android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
             ),
             object: AirPermissions.Callbacks {
+
                 override fun onSuccess() {
-                    // DO SOMETHING
+                    Toast.makeText(this@PermissionsActivity, "Permission granted", Toast.LENGTH_SHORT).show() 
+                    // OR DO SOMETHING ELSE
                 }
 
                 override fun onFailure() {
-                    // DO SOMETHING
+                    Toast.makeText(this@PermissionsActivity, "Permission denied", Toast.LENGTH_SHORT).show()
+                    finish()
+                    // OR DO SOMETHING ELSE
                 }
+
+                override fun onAnyPermissionPermanentlyDenied() {
+                    Toast.makeText(this@PermissionsActivity, "Please enable permissions from settings", Toast.LENGTH_SHORT).show()
+                    AirPermissions.openAppPermissionSettings(this@PermissionsActivity)
+                    finish()
+                    // OR DO SOMETHING ELSE
+                }
+
             }
         )
     }
