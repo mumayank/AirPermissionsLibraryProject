@@ -23,18 +23,7 @@ class AirPermissions(
     }
 
     init {
-        if (areAllPermissionsGranted()) callbacks.onSuccess() else ActivityCompat.requestPermissions(activity, permissionsList, PERMISSION_REQUEST)
-    }
-
-    private fun areAllPermissionsGranted(): Boolean {
-        var allPermissionsAvailable = true
-        for (permission in permissionsList) {
-            if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
-                allPermissionsAvailable = false
-                break
-            }
-        }
-        return allPermissionsAvailable
+        if (areAllPermissionsGranted(activity, permissionsList)) callbacks.onSuccess() else ActivityCompat.requestPermissions(activity, permissionsList, PERMISSION_REQUEST)
     }
 
     private fun isAnyPermissionPermanentlyDisabled(): Boolean {
@@ -53,7 +42,7 @@ class AirPermissions(
     fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
             PERMISSION_REQUEST -> {
-                if (areAllPermissionsGranted()) {
+                if (areAllPermissionsGranted(activity, permissionsList)) {
                     callbacks.onSuccess()
                 } else {
                     if (isAnyPermissionPermanentlyDisabled()) {
@@ -74,6 +63,20 @@ class AirPermissions(
             val uri = Uri.fromParts("package", activity.packageName, null)
             intent.data = uri
             activity.startActivity(intent)
+        }
+
+        fun areAllPermissionsGranted(
+            activity: Activity,
+            permissionsList: Array<String>
+        ): Boolean {
+            var allPermissionsAvailable = true
+            for (permission in permissionsList) {
+                if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsAvailable = false
+                    break
+                }
+            }
+            return allPermissionsAvailable
         }
     }
 
