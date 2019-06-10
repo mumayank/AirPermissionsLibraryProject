@@ -16,46 +16,32 @@ Since normal permissions are automatically granted to your app by Android OS at 
 You can easily do it like this:
 
 ```kotlin
-//  GO TO YOUR ACTIVITY CLASS
+// IN YOUR ACTIVITY ->
 class MainActivity : AppCompatActivity() {
 
-    // DECLARE AIR PERMISSIONS OBJECT AT TOP-LEVEL
+    // (STEP 1/3) DECLARE AIR PERMISSIONS OBJECT AT TOP-LEVEL
     private var airPermission: AirPermissions? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        // INIT AIR PERMISSION OBJECT WHEN YOU WANT TO ASK FOR DANGEROUS PERMISSIONS
-        airPermission = AirPermissions(
+    override fun onResume() {
+        // (STEP 2/3) INIT AIR PERMISSION OBJECT WHEN YOU WANT TO ASK FOR DANGEROUS PERMISSIONS ( PREFERABLY IN onResume() )
+        airPermissions = AirPermissions(
             this,
             arrayListOf(
-                AirPermissions.PermissionItem(android.Manifest.permission.ACCESS_COARSE_LOCATION, "Please allow location services"),
-                AirPermissions.PermissionItem(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, "Please allow write external storage services")
-            ),
-            object: AirPermissions.Callbacks {
-
-                override fun onSuccess() {
-                    Toast.makeText(this@PermissionsActivity, "Permission granted", Toast.LENGTH_SHORT).show()
-                }
-
-                override fun onFailure() {
-                    Toast.makeText(this@PermissionsActivity, "Permission denied", Toast.LENGTH_SHORT).show()
-                    finish()
-                }
-
-                override fun onAnyPermissionPermanentlyDenied() {
-                    finish()
-                }
-
-            }
+                AirPermissions.PermissionItem(
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION, // JUST EXAMPLE
+                    "Please grant location permission" // JUST EXAMPLE
+                ),
+                AirPermissions.PermissionItem(
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE, // JUST EXAMPLE
+                    "Please grant write external storage permission" // JUST EXAMPLE
+                )
+            )
         )
     }
 
-    // ADD THIS ALSO (OVERRIDE ON REQUEST PERMISSION RESULT OF YOUR ACTIVITY TO CALL AIR PERMISSION'S METHOD BY THE SAME NAME
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        airPermission?.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    // OVERRIDE onActivityResult METHOD OF YOUR ACTIVITY
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        airPermissions?.onActivityResult(requestCode, resultCode, data)
     }
 }
 ```
