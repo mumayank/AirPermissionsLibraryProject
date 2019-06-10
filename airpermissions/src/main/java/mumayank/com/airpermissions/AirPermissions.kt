@@ -15,11 +15,15 @@ class AirPermissions(
     private val permissionItems: ArrayList<PermissionItem>?,
     private val onAllPermissionsGranted: OnAllPermissionsGranted?
 ){
+    private var isOnAllPermissionsGrantedAlreadyCalled = false
 
     init {
         if (activity != null && permissionItems != null) {
             if (areAllPermissionsGranted(activity, permissionItems)) {
-                onAllPermissionsGranted?.callback()
+                if (isOnAllPermissionsGrantedAlreadyCalled.not()) {
+                    onAllPermissionsGranted?.callback()
+                    isOnAllPermissionsGrantedAlreadyCalled = true
+                }
             } else {
                 activity.startActivityForResult(
                     Intent(activity, AirPermissionsActivity::class.java)
@@ -33,7 +37,10 @@ class AirPermissions(
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                // onAllPermissionsGranted?.callback()
+                if (isOnAllPermissionsGrantedAlreadyCalled.not()) {
+                    onAllPermissionsGranted?.callback()
+                    isOnAllPermissionsGrantedAlreadyCalled = true
+                }
             } else {
                 activity?.finish()
             }
