@@ -35,7 +35,13 @@ class MainActivity : AppCompatActivity() {
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE, // JUST EXAMPLE
                     "Please grant write external storage permission" // JUST EXAMPLE
                 )
-            )
+            ),
+            object: AirPermissions.OnAllPermissionsGranted {
+                override fun callback() {
+                    // PUT APP LOGIC HERE WHICH SHOULD EXECUTE AFTER ALL PERMISSIONS ARE GRANTED
+                    Toast.makeText(this@PermissionsActivity, "All permissions are granted", Toast.LENGTH_SHORT).show()
+                }
+            }
         )
     }
 
