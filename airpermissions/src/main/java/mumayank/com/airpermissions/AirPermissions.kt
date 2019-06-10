@@ -1,7 +1,6 @@
 package mumayank.com.airpermissions
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -9,100 +8,52 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-
-
-private const val PERMISSION_REQUEST = 1243
+import java.io.Serializable
 
 class AirPermissions(
     private val activity: Activity?,
-    private val permissionItems: ArrayList<PermissionItem>?,
-    private val callbacks: Callbacks?
-) {
+    private val permissionItems: ArrayList<PermissionItem>?
+){
+
+    init {
+        if (activity != null && permissionItems != null) {
+            if (areAllPermissionsGranted(activity, permissionItems).not()) {
+                activity.startActivityForResult(
+                    Intent(activity, AirPermissionsActivity::class.java)
+                    .putExtra(AirPermissionsActivity.INTENT_EXTRA_PERMISSION_ITEMS, permissionItems),
+                    REQUEST_CODE
+                )
+            }
+        }
+    }
+
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == REQUEST_CODE && resultCode != Activity.RESULT_OK) {
+            activity?.finish()
+        }
+    }
+
     class PermissionItem(
         val permission: String,
         val permissionRationalText: String
-    )
-
-    interface Callbacks {
-        fun onSuccess()
-        fun onFailure()
-        fun onAnyPermissionPermanentlyDenied()
-    }
-
-    var currentIndex = -1
-
-    init {
-        if (activity != null && permissionItems != null && callbacks != null) {
-            if (areAllPermissionsGranted(activity, permissionItems)) {
-                callbacks.onSuccess()
-            } else {
-                askNextPermission()
-            }
-        }
-    }
-
-    private fun askNextPermission() {
-        currentIndex++
-        if (currentIndex == permissionItems?.size) {
-            callbacks?.onSuccess()
-        } else {
-            if (permissionItems == null || activity == null) {
-                return
-            }
-
-            if (isPermissionAlreadyGranted(activity, permissionItems[currentIndex].permission)) {
-                askNextPermission()
-            } else {
-                AlertDialog.Builder(activity)
-                    .setCancelable(false)
-                    .setTitle("Permission required")
-                    .setMessage(permissionItems[currentIndex].permissionRationalText)
-                    .setPositiveButton("PROCEED") { dialog, which ->
-                        ActivityCompat.requestPermissions(activity, arrayOf(permissionItems[currentIndex].permission), PERMISSION_REQUEST)
-                    }
-                    .setNegativeButton("CANCEL") { dialog, which ->
-                        callbacks?.onFailure()
-                    }
-                    .show()
-            }
-        }
-    }
-
-    fun onRequestPermissionsResult(requestCode: Int?, permissions: Array<out String>?, grantResults: IntArray?) {
-        when (requestCode) {
-            PERMISSION_REQUEST -> {
-                if (permissionItems == null) {
-                    return
-                }
-
-                if (isPermissionAlreadyGranted(activity, permissionItems[currentIndex].permission)) {
-                    askNextPermission()
-                } else {
-                    if (isPermissionPermanentlyDisabled(activity, permissionItems[currentIndex].permission)) {
-                        openAppPermissionSettings(activity)
-                        callbacks?.onAnyPermissionPermanentlyDenied()
-                    } else {
-                        callbacks?.onFailure()
-                    }
-                }
-                return
-            }
-        }
-    }
+    ): Serializable
 
     companion object {
 
-        fun openAppPermissionSettings(activity: Activity?) {
-            if (activity == null) {
-                return
+        private val REQUEST_CODE = 127
+
+        private fun areAllPermissionsGranted(activity: Activity?, permissionItems: ArrayList<PermissionItem>?): Boolean {
+            if (permissionItems == null) {
+                return false
             }
 
-            val intent = Intent()
-            intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-            val uri = Uri.fromParts("package", activity.packageName, null)
-            intent.data = uri
-            activity.startActivity(intent)
-            Toast.makeText(activity, "Please enable permissions from settings to proceed", Toast.LENGTH_LONG).show()
+            var permissionsAreGranted = true
+            for (permissionItem in permissionItems) {
+                if (isPermissionAlreadyGranted(activity, permissionItem.permission).not()) {
+                    permissionsAreGranted = false
+                }
+            }
+            return permissionsAreGranted
         }
 
         fun isPermissionAlreadyGranted(activity: Activity?, permission: String?): Boolean {
@@ -123,19 +74,19 @@ class AirPermissions(
             return isPermissionGranted && isPermissionPermanentlyDisabled
         }
 
-        fun areAllPermissionsGranted(activity: Activity?, permissionItems: ArrayList<PermissionItem>?): Boolean {
-            if (permissionItems == null) {
-                return false
+        fun openAppPermissionSettings(activity: Activity?) {
+            if (activity == null) {
+                return
             }
 
-            var permissionsAreGranted = true
-            for (permissionItem in permissionItems) {
-                if (AirPermissions.isPermissionAlreadyGranted(activity, permissionItem.permission).not()) {
-                    permissionsAreGranted = false
-                }
-            }
-            return permissionsAreGranted
+            val intent = Intent()
+            intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+            val uri = Uri.fromParts("package", activity.packageName, null)
+            intent.data = uri
+            activity.startActivity(intent)
+            Toast.makeText(activity, "Please enable permissions from settings to proceed", Toast.LENGTH_LONG).show()
         }
 
     }
+
 }
