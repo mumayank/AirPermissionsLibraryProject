@@ -1,8 +1,8 @@
 package mumayank.com.airpermissionslibraryproject
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import mumayank.com.airpermissions.AirPermissions
 
 class PermissionsActivity : AppCompatActivity() {
@@ -19,9 +19,9 @@ class PermissionsActivity : AppCompatActivity() {
 
         airPermission = AirPermissions(
             this,
-            arrayOf(
-                android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            arrayListOf(
+                AirPermissions.PermissionItem(android.Manifest.permission.ACCESS_COARSE_LOCATION, "Please allow location services"),
+                AirPermissions.PermissionItem(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, "Please allow write external storage services")
             ),
             object: AirPermissions.Callbacks {
 
@@ -35,8 +35,6 @@ class PermissionsActivity : AppCompatActivity() {
                 }
 
                 override fun onAnyPermissionPermanentlyDenied() {
-                    Toast.makeText(this@PermissionsActivity, "Please enable permissions from settings", Toast.LENGTH_SHORT).show()
-                    AirPermissions.openAppPermissionSettings(this@PermissionsActivity)
                     finish()
                 }
 
