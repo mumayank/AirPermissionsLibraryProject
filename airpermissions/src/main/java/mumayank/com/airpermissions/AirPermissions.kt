@@ -14,9 +14,9 @@ import androidx.core.content.ContextCompat
 private const val PERMISSION_REQUEST = 1243
 
 class AirPermissions(
-    private val activity: Activity,
-    private val permissionItems: ArrayList<PermissionItem>,
-    private val callbacks: Callbacks
+    private val activity: Activity?,
+    private val permissionItems: ArrayList<PermissionItem>?,
+    private val callbacks: Callbacks?
 ) {
     class PermissionItem(
         val permission: String,
@@ -32,14 +32,24 @@ class AirPermissions(
     var currentIndex = -1
 
     init {
-        askNextPermission()
+        if (activity != null && permissionItems != null && callbacks != null) {
+            if (areAllPermissionsGranted(activity, permissionItems)) {
+                callbacks.onSuccess()
+            } else {
+                askNextPermission()
+            }
+        }
     }
 
     private fun askNextPermission() {
         currentIndex++
-        if (currentIndex == permissionItems.size) {
-            callbacks.onSuccess()
+        if (currentIndex == permissionItems?.size) {
+            callbacks?.onSuccess()
         } else {
+            if (permissionItems == null || activity == null) {
+                return
+            }
+
             if (isPermissionAlreadyGranted(activity, permissionItems[currentIndex].permission)) {
                 askNextPermission()
             } else {
@@ -51,24 +61,28 @@ class AirPermissions(
                         ActivityCompat.requestPermissions(activity, arrayOf(permissionItems[currentIndex].permission), PERMISSION_REQUEST)
                     }
                     .setNegativeButton("CANCEL") { dialog, which ->
-                        callbacks.onFailure()
+                        callbacks?.onFailure()
                     }
                     .show()
             }
         }
     }
 
-    fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    fun onRequestPermissionsResult(requestCode: Int?, permissions: Array<out String>?, grantResults: IntArray?) {
         when (requestCode) {
             PERMISSION_REQUEST -> {
+                if (permissionItems == null) {
+                    return
+                }
+
                 if (isPermissionAlreadyGranted(activity, permissionItems[currentIndex].permission)) {
                     askNextPermission()
                 } else {
                     if (isPermissionPermanentlyDisabled(activity, permissionItems[currentIndex].permission)) {
                         openAppPermissionSettings(activity)
-                        callbacks.onAnyPermissionPermanentlyDenied()
+                        callbacks?.onAnyPermissionPermanentlyDenied()
                     } else {
-                        callbacks.onFailure()
+                        callbacks?.onFailure()
                     }
                 }
                 return
@@ -78,7 +92,11 @@ class AirPermissions(
 
     companion object {
 
-        fun openAppPermissionSettings(activity: Activity) {
+        fun openAppPermissionSettings(activity: Activity?) {
+            if (activity == null) {
+                return
+            }
+
             val intent = Intent()
             intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
             val uri = Uri.fromParts("package", activity.packageName, null)
@@ -87,14 +105,36 @@ class AirPermissions(
             Toast.makeText(activity, "Please enable permissions from settings to proceed", Toast.LENGTH_LONG).show()
         }
 
-        fun isPermissionAlreadyGranted(activity: Activity, permission: String): Boolean {
+        fun isPermissionAlreadyGranted(activity: Activity?, permission: String?): Boolean {
+            if (activity == null || permission == null) {
+                return false
+            }
+
             return ContextCompat.checkSelfPermission(activity, permission) == PackageManager.PERMISSION_GRANTED
         }
 
-        fun isPermissionPermanentlyDisabled(activity: Activity, permission: String): Boolean {
+        fun isPermissionPermanentlyDisabled(activity: Activity?, permission: String?): Boolean {
+            if (activity == null || permission == null) {
+                return true
+            }
+
             val isPermissionGranted = ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED
             val isPermissionPermanentlyDisabled = ActivityCompat.shouldShowRequestPermissionRationale(activity, permission).not()
             return isPermissionGranted && isPermissionPermanentlyDisabled
+        }
+
+        fun areAllPermissionsGranted(activity: Activity?, permissionItems: ArrayList<PermissionItem>?): Boolean {
+            if (permissionItems == null) {
+                return false
+            }
+
+            var permissionsAreGranted = true
+            for (permissionItem in permissionItems) {
+                if (AirPermissions.isPermissionAlreadyGranted(activity, permissionItem.permission).not()) {
+                    permissionsAreGranted = false
+                }
+            }
+            return permissionsAreGranted
         }
 
     }
