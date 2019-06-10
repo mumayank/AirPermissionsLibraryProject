@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    // OVERRIDE onActivityResult METHOD OF YOUR ACTIVITY
+    // (STEP 3/3) OVERRIDE onActivityResult METHOD OF YOUR ACTIVITY
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         airPermissions?.onActivityResult(requestCode, resultCode, data)
     }
