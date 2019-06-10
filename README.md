@@ -29,28 +29,23 @@ class MainActivity : AppCompatActivity() {
         // INIT AIR PERMISSION OBJECT WHEN YOU WANT TO ASK FOR DANGEROUS PERMISSIONS
         airPermission = AirPermissions(
             this,
-            arrayOf(
-                android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            arrayListOf(
+                AirPermissions.PermissionItem(android.Manifest.permission.ACCESS_COARSE_LOCATION, "Please allow location services"),
+                AirPermissions.PermissionItem(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, "Please allow write external storage services")
             ),
             object: AirPermissions.Callbacks {
 
                 override fun onSuccess() {
-                    Toast.makeText(this@PermissionsActivity, "Permission granted", Toast.LENGTH_SHORT).show() 
-                    // OR DO SOMETHING ELSE
+                    Toast.makeText(this@PermissionsActivity, "Permission granted", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onFailure() {
                     Toast.makeText(this@PermissionsActivity, "Permission denied", Toast.LENGTH_SHORT).show()
                     finish()
-                    // OR DO SOMETHING ELSE
                 }
 
                 override fun onAnyPermissionPermanentlyDenied() {
-                    Toast.makeText(this@PermissionsActivity, "Please enable permissions from settings", Toast.LENGTH_SHORT).show()
-                    AirPermissions.openAppPermissionSettings(this@PermissionsActivity)
                     finish()
-                    // OR DO SOMETHING ELSE
                 }
 
             }
