@@ -2,6 +2,7 @@ package mumayank.com.airpermissionslibraryproject
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import mumayank.com.airpermissions.AirPermissions
 
@@ -32,7 +33,12 @@ class PermissionsActivity : AppCompatActivity() {
                     android.Manifest.permission.READ_CONTACTS,
                     "Please grant read contacts permission"
                 )
-            )
+            ),
+            object: AirPermissions.OnAllPermissionsGranted {
+                override fun callback() {
+                    Toast.makeText(this@PermissionsActivity, "All permissions are granted", Toast.LENGTH_SHORT).show()
+                }
+            }
         )
 
     }

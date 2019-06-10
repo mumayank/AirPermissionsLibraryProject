@@ -12,15 +12,18 @@ import java.io.Serializable
 
 class AirPermissions(
     private val activity: Activity?,
-    private val permissionItems: ArrayList<PermissionItem>?
+    private val permissionItems: ArrayList<PermissionItem>?,
+    private val onAllPermissionsGranted: OnAllPermissionsGranted?
 ){
 
     init {
         if (activity != null && permissionItems != null) {
-            if (areAllPermissionsGranted(activity, permissionItems).not()) {
+            if (areAllPermissionsGranted(activity, permissionItems)) {
+                onAllPermissionsGranted?.callback()
+            } else {
                 activity.startActivityForResult(
                     Intent(activity, AirPermissionsActivity::class.java)
-                    .putExtra(AirPermissionsActivity.INTENT_EXTRA_PERMISSION_ITEMS, permissionItems),
+                        .putExtra(AirPermissionsActivity.INTENT_EXTRA_PERMISSION_ITEMS, permissionItems),
                     REQUEST_CODE
                 )
             }
@@ -28,8 +31,12 @@ class AirPermissions(
     }
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_CODE && resultCode != Activity.RESULT_OK) {
-            activity?.finish()
+        if (requestCode == REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                // onAllPermissionsGranted?.callback()
+            } else {
+                activity?.finish()
+            }
         }
     }
 
@@ -37,6 +44,10 @@ class AirPermissions(
         val permission: String,
         val permissionRationalText: String
     ): Serializable
+
+    interface OnAllPermissionsGranted {
+        fun callback()
+    }
 
     companion object {
 
