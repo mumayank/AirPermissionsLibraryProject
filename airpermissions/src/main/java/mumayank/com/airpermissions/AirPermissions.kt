@@ -1,6 +1,7 @@
 package mumayank.com.airpermissions
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -15,41 +16,62 @@ class AirPermissions(
     private val permissionItems: ArrayList<PermissionItem>?,
     private val onAllPermissionsGranted: OnAllPermissionsGranted?
 ){
-    private var isOnAllPermissionsGrantedAlreadyCalled = false
+    private var index = -1
 
     init {
-        if (activity != null && permissionItems != null) {
-            if (areAllPermissionsGranted(activity, permissionItems)) {
-                if (isOnAllPermissionsGrantedAlreadyCalled.not()) {
-                    onAllPermissionsGranted?.callback()
-                    isOnAllPermissionsGrantedAlreadyCalled = true
-                }
+        index = -1
+        askNextPermission()
+    }
+
+    private fun askNextPermission() {
+        if (activity == null || permissionItems == null || permissionItems.size == 0) {
+            return
+        }
+
+        index++
+        if (index == permissionItems.size) {
+            onAllPermissionsGranted?.callback()
+        } else {
+            if (isPermissionAlreadyGranted(activity, permissionItems[index].permission)) {
+                askNextPermission()
             } else {
-                activity.startActivityForResult(
-                    Intent(activity, AirPermissionsActivity::class.java)
-                        .putExtra(AirPermissionsActivity.INTENT_EXTRA_PERMISSION_ITEMS, permissionItems),
-                    REQUEST_CODE
-                )
+                AlertDialog.Builder(activity)
+                    .setCancelable(false)
+                    .setTitle("Permission required")
+                    .setMessage(permissionItems[index].explanationForThePermission)
+                    .setPositiveButton("PROCEED") { _, _ ->
+                        ActivityCompat.requestPermissions(activity, arrayOf(permissionItems[index].permission), PERMISSION_REQUEST)
+                    }
+                    .setNegativeButton("CANCEL") { _, _ ->
+                        activity.finish()
+                    }
+                    .show()
             }
         }
     }
 
-    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (isOnAllPermissionsGrantedAlreadyCalled.not()) {
-                    onAllPermissionsGranted?.callback()
-                    isOnAllPermissionsGrantedAlreadyCalled = true
+    fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        when (requestCode) {
+            PERMISSION_REQUEST -> {
+                if (activity == null || permissionItems == null || permissionItems.size == 0) {
+                    return
                 }
-            } else {
-                activity?.finish()
+
+                if (isPermissionAlreadyGranted(activity, permissionItems[index].permission)) {
+                    askNextPermission()
+                } else {
+                    if (isPermissionPermanentlyDisabled(activity, permissionItems[index].permission)) {
+                        openAppPermissionSettings(activity)
+                    }
+                    activity.finish()
+                }
             }
         }
     }
 
     class PermissionItem(
         val permission: String,
-        val permissionRationalText: String
+        val explanationForThePermission: String
     ): Serializable
 
     interface OnAllPermissionsGranted {
@@ -58,7 +80,7 @@ class AirPermissions(
 
     companion object {
 
-        private val REQUEST_CODE = 127
+        private const val PERMISSION_REQUEST = 1243
 
         private fun areAllPermissionsGranted(activity: Activity?, permissionItems: ArrayList<PermissionItem>?): Boolean {
             if (permissionItems == null) {
@@ -74,7 +96,7 @@ class AirPermissions(
             return permissionsAreGranted
         }
 
-        fun isPermissionAlreadyGranted(activity: Activity?, permission: String?): Boolean {
+        private fun isPermissionAlreadyGranted(activity: Activity?, permission: String?): Boolean {
             if (activity == null || permission == null) {
                 return false
             }
@@ -82,7 +104,7 @@ class AirPermissions(
             return ContextCompat.checkSelfPermission(activity, permission) == PackageManager.PERMISSION_GRANTED
         }
 
-        fun isPermissionPermanentlyDisabled(activity: Activity?, permission: String?): Boolean {
+        private fun isPermissionPermanentlyDisabled(activity: Activity?, permission: String?): Boolean {
             if (activity == null || permission == null) {
                 return true
             }
@@ -92,7 +114,7 @@ class AirPermissions(
             return isPermissionGranted && isPermissionPermanentlyDisabled
         }
 
-        fun openAppPermissionSettings(activity: Activity?) {
+        private fun openAppPermissionSettings(activity: Activity?) {
             if (activity == null) {
                 return
             }
