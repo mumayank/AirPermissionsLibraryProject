@@ -82,7 +82,7 @@ class AirPermissions(
 
         private const val PERMISSION_REQUEST = 1243
 
-        private fun areAllPermissionsGranted(activity: Activity?, permissionItems: ArrayList<PermissionItem>?): Boolean {
+        fun areAllPermissionsGranted(activity: Activity?, permissionItems: ArrayList<PermissionItem>?): Boolean {
             if (permissionItems == null) {
                 return false
             }
