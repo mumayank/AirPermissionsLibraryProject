@@ -42,21 +42,21 @@ class AirPermissions(
                         .setTitle("Permission required")
                         .setMessage(permissionItems[index].explanationForThePermission)
                         .setPositiveButton("PROCEED") { _, _ ->
-                            requestForPermission(activity, arrayOf(permissionItems[index].permission), PERMISSION_REQUEST)
+                            requestForPermission(activity, arrayOf(permissionItems[index].permission))
                         }
                         .setNegativeButton("CANCEL") { _, _ ->
                             activity.finish()
                         }
                         .show()
                 } else {
-                    requestForPermission(activity, arrayOf(permissionItems[index].permission), PERMISSION_REQUEST)
+                    requestForPermission(activity, arrayOf(permissionItems[index].permission))
                 }
             }
         }
     }
 
-    private fun requestForPermission(activity: Activity, permissions: Array<String>, permissionRequestInt: Int) {
-        ActivityCompat.requestPermissions(activity, permissions, permissionRequestInt)
+    private fun requestForPermission(activity: Activity, permissions: Array<String>) {
+        ActivityCompat.requestPermissions(activity, permissions, PERMISSION_REQUEST)
     }
 
     fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
