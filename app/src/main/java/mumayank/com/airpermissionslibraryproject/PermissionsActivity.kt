@@ -18,7 +18,7 @@ class PermissionsActivity : AppCompatActivity() {
             arrayListOf(
                 AirPermissions.PermissionItem(android.Manifest.permission.ACCESS_COARSE_LOCATION, "Please grant location permission"),
                 AirPermissions.PermissionItem(android.Manifest.permission.WRITE_EXTERNAL_STORAGE,"Please grant write external storage permission"),
-                AirPermissions.PermissionItem(android.Manifest.permission.READ_CONTACTS,"Please grant read contacts permission")
+                AirPermissions.PermissionItem(android.Manifest.permission.READ_CONTACTS)
             ),
             object: AirPermissions.OnAllPermissionsGranted {
                 override fun callback() {

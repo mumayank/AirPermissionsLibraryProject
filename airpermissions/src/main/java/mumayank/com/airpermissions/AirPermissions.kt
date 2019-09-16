@@ -35,19 +35,28 @@ class AirPermissions(
             if (isPermissionAlreadyGranted(activity, permissionItems[index].permission)) {
                 askNextPermission()
             } else {
-                AlertDialog.Builder(activity)
-                    .setCancelable(false)
-                    .setTitle("Permission required")
-                    .setMessage(permissionItems[index].explanationForThePermission)
-                    .setPositiveButton("PROCEED") { _, _ ->
-                        ActivityCompat.requestPermissions(activity, arrayOf(permissionItems[index].permission), PERMISSION_REQUEST)
-                    }
-                    .setNegativeButton("CANCEL") { _, _ ->
-                        activity.finish()
-                    }
-                    .show()
+                val explanationForThePermission = permissionItems[index].explanationForThePermission
+                if (explanationForThePermission.isNullOrEmpty().not()) {
+                    AlertDialog.Builder(activity)
+                        .setCancelable(false)
+                        .setTitle("Permission required")
+                        .setMessage(permissionItems[index].explanationForThePermission)
+                        .setPositiveButton("PROCEED") { _, _ ->
+                            requestForPermission(activity, arrayOf(permissionItems[index].permission), PERMISSION_REQUEST)
+                        }
+                        .setNegativeButton("CANCEL") { _, _ ->
+                            activity.finish()
+                        }
+                        .show()
+                } else {
+                    requestForPermission(activity, arrayOf(permissionItems[index].permission), PERMISSION_REQUEST)
+                }
             }
         }
+    }
+
+    private fun requestForPermission(activity: Activity, permissions: Array<String>, permissionRequestInt: Int) {
+        ActivityCompat.requestPermissions(activity, permissions, permissionRequestInt)
     }
 
     fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -71,7 +80,7 @@ class AirPermissions(
 
     class PermissionItem(
         val permission: String,
-        val explanationForThePermission: String
+        val explanationForThePermission: String? = null
     ): Serializable
 
     interface OnAllPermissionsGranted {
