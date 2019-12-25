@@ -128,10 +128,8 @@ class AirPermissions(
                 return
             }
 
-            val intent = Intent()
-            intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-            val uri = Uri.fromParts("package", activity.packageName, null)
-            intent.data = uri
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            intent.data = Uri.fromParts("package", activity.packageName, null)
             activity.startActivity(intent)
             Toast.makeText(activity, "Please enable permissions from settings to proceed", Toast.LENGTH_LONG).show()
         }
