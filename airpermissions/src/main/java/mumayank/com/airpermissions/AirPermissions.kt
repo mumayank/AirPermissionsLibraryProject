@@ -24,8 +24,12 @@ class AirPermissions(
     }
 
     private fun askNextPermission() {
-        if (activity == null || permissionItems == null || permissionItems.size == 0) {
+        if (activity == null || permissionItems == null) {
             return
+        }
+
+        if (permissionItems.size == 0) {
+            onAllPermissionsGranted?.callback()
         }
 
         index++
