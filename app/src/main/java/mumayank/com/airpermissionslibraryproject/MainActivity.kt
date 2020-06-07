@@ -13,4 +13,5 @@ class MainActivity : AppCompatActivity() {
 
         button.setOnClickListener { startActivity(Intent(this, PermissionsActivity::class.java)) }
     }
+
 }
