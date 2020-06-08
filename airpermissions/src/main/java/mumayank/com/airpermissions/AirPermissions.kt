@@ -22,6 +22,15 @@ class AirPermissions(
     companion object {
         private const val PERMISSION_REQUEST = 1243
         private const val SETTINGS_REQUEST = 1244
+
+        fun areAllGranted(activity: Activity, permissions: Array<String>): Boolean {
+            return permissions.all {
+                ContextCompat.checkSelfPermission(
+                    activity,
+                    it
+                ) == PackageManager.PERMISSION_GRANTED
+            }
+        }
     }
 
     fun request() {
